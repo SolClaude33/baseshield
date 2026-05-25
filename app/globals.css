@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --border: 0 0% 90%;
+    --ring: 0 0% 9%;
+    --primary: 217 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;          /* pure black */
+    --foreground: 0 0% 96%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 96%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 14%;
+    --ring: 0 0% 60%;
+    --primary: 217 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif), Georgia, serif;
+  }
+  .hero-glow {
+    background: radial-gradient(circle at 50% 20%, rgba(0, 82, 255, 0.15), transparent 60%);
+  }
+  .card-glow {
+    background: radial-gradient(circle at 50% 50%, rgba(0, 82, 255, 0.4), transparent 60%);
+  }
+  .flow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: #0052ff;
+    box-shadow: 0 0 12px #0052ff, 0 0 4px #0052ff;
+    animation: flow-dot 2.4s linear infinite;
+  }
+  .flow-dot-delayed {
+    animation-delay: 1.2s;
+  }
+}
+
+@keyframes flow-dot {
+  0%   { left: 0%;   opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
