@@ -9,11 +9,23 @@ import { MODELS, type ModelId } from "./pricing";
  * Region URLs:
  *   - International: https://ark.ap-southeast.bytepluses.com/api/v3
  *   - China:         https://ark.cn-beijing.volces.com/api/v3
+ *
+ * Lazy-initialized so missing env vars don't crash the build (only matter at request time).
  */
-const ark = new OpenAI({
-  apiKey: process.env.ARK_API_KEY,
-  baseURL: process.env.ARK_BASE_URL ?? "https://ark.ap-southeast.bytepluses.com/api/v3",
-});
+let _ark: OpenAI | undefined;
+function getArk(): OpenAI {
+  if (!_ark) {
+    const apiKey = process.env.ARK_API_KEY;
+    if (!apiKey) {
+      throw new Error("ARK_API_KEY is not set");
+    }
+    _ark = new OpenAI({
+      apiKey,
+      baseURL: process.env.ARK_BASE_URL ?? "https://ark.ap-southeast.bytepluses.com/api/v3",
+    });
+  }
+  return _ark;
+}
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -36,9 +48,10 @@ export async function runChat(model: ModelId, messages: ChatMessage[]): Promise<
     throw new Error(`Model ${model} is not configured — set its Ark model/endpoint id in lib/llm/pricing.ts`);
   }
 
-  const r = await ark.chat.completions.create({
+  const r = await getArk().chat.completions.create({
     model: cfg.upstream,
     messages,
+    max_tokens: 1024,
   });
 
   return {
