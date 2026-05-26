@@ -73,23 +73,27 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* HEADER */}
-        <div className="flex items-start justify-between">
-          <h2 className="font-serif text-2xl">Deposit</h2>
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div
+          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* CLOSE BUTTON — absolute top-right, more prominent */}
           <button
             onClick={onClose}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Close"
+            className="absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" />
           </button>
-        </div>
+
+          {/* HEADER */}
+          <div className="pr-12">
+            <h2 className="font-serif text-2xl">Deposit</h2>
+          </div>
 
         {/* DEPOSIT / WITHDRAW TABS */}
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg bg-background p-1">
@@ -207,6 +211,7 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
             </p>
           </>
         )}
+        </div>
       </div>
     </div>
   );
