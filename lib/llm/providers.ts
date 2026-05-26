@@ -51,7 +51,9 @@ export async function runChat(model: ModelId, messages: ChatMessage[]): Promise<
   const r = await getArk().chat.completions.create({
     model: cfg.upstream,
     messages,
-    max_tokens: 1024,
+    // Reasoning models (GPT-OSS) use a chunk of tokens for internal reasoning before
+    // emitting visible content. 500 ≈ enough headroom for reasoning + ~200-word answer.
+    max_tokens: 500,
   });
 
   return {

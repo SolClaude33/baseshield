@@ -9,6 +9,9 @@ import { runChat } from "@/lib/llm/providers";
 
 const FREE_TIER_LIMIT = 3;
 
+const DEFAULT_SYSTEM_PROMPT =
+  "You are BaseShield, a private AI assistant on Base. Be direct and concise — keep responses under 200 words unless the user explicitly asks for more detail. Prefer short paragraphs and bullet points over long prose. Do not pad answers with disclaimers, restatements, or filler.";
+
 const BodySchema = z.object({
   model: z.string(),
   messages: z.array(
@@ -68,10 +71,16 @@ export async function POST(req: Request) {
     );
   }
 
+  // Inject default system prompt unless the caller already provided one.
+  const hasSystem = messages.some((m) => m.role === "system");
+  const finalMessages = hasSystem
+    ? messages
+    : [{ role: "system" as const, content: DEFAULT_SYSTEM_PROMPT }, ...messages];
+
   // Run the call.
   let result;
   try {
-    result = await runChat(modelId, messages);
+    result = await runChat(modelId, finalMessages);
   } catch (e) {
     console.error("LLM error:", e);
     return NextResponse.json({ error: "upstream error" }, { status: 502 });
