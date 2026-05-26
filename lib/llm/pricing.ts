@@ -22,22 +22,22 @@ export const MODELS: Record<ModelId, ModelConfig> = {
   "gpt-oss-120b": {
     label: "GPT-OSS 120B",
     upstream: "gpt-oss-120b-250805",
-    inputPer1M: 195_000,    // $0.195 with markup
-    outputPer1M: 975_000,   // $0.975 with markup
+    inputPer1M: 150_000,    // $0.15 / 1M tokens
+    outputPer1M: 300_000,   // $0.30 / 1M tokens
   },
   "deepseek-v3.1": {
     label: "DeepSeek V3.1",
     // Will work once you create a BytePlus endpoint and paste the ep-XXXX id here.
     upstream: "deepseek-v3-1-250821",
-    inputPer1M: 351_000,    // $0.351 with markup
-    outputPer1M: 1_430_000, // $1.430 with markup
+    inputPer1M: 100_000,    // $0.10 / 1M tokens
+    outputPer1M: 200_000,   // $0.20 / 1M tokens
     soon: true,
   },
   "claude-sonnet": {
     label: "Claude Sonnet 4.6",
     upstream: "claude-sonnet-not-available-on-ark",
-    inputPer1M: 3_900_000,
-    outputPer1M: 19_500_000,
+    inputPer1M: 300_000,    // $0.30 / 1M tokens
+    outputPer1M: 600_000,   // $0.60 / 1M tokens
     soon: true,
   },
 };
