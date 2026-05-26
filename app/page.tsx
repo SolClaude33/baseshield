@@ -146,7 +146,7 @@ export default function Landing() {
               Generate API key
             </Link>
             <Link
-              href="https://github.com" target="_blank"
+              href="/docs"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium hover:bg-muted transition"
             >
               Read the docs
@@ -162,9 +162,9 @@ export default function Landing() {
             <span>BaseShield · Private AI on Base</span>
           </div>
           <div className="flex items-center gap-5">
-            <Link href="https://github.com" target="_blank" className="hover:text-foreground">Docs</Link>
-            <a href="https://github.com" className="hover:text-foreground">GitHub</a>
-            <a href="https://twitter.com/BaseShield" className="hover:text-foreground">Twitter</a>
+            <Link href="/docs" className="hover:text-foreground">Docs</Link>
+            <a href="https://github.com/SolClaude33/baseshield" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+            <a href="https://x.com/BaseShieldPriv" target="_blank" rel="noreferrer" className="hover:text-foreground">Twitter</a>
           </div>
         </div>
       </footer>
