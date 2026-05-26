@@ -296,8 +296,14 @@ BASESHIELD_API_KEY=your_key npx ts-node test-connection.ts`}
                   </div>
                 </div>
 
-                <Link
-                  href="/chat"
+                <button
+                  onClick={() => {
+                    if (!m.soon) {
+                      setTab("keys");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                  disabled={m.soon}
                   className={`mt-6 block w-full rounded-lg py-2.5 text-center text-sm font-medium ${
                     m.soon
                       ? "cursor-not-allowed bg-muted text-muted-foreground"
@@ -305,7 +311,7 @@ BASESHIELD_API_KEY=your_key npx ts-node test-connection.ts`}
                   }`}
                 >
                   {m.soon ? "Coming soon" : "Get Started"}
-                </Link>
+                </button>
               </div>
             ))}
           </div>
