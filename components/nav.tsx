@@ -5,18 +5,20 @@ import { usePathname } from "next/navigation";
 import { Logo } from "./logo";
 import { WalletButton } from "./wallet-button";
 import { ThemeToggle } from "./theme-toggle";
+import { BalanceButton } from "./balance-button";
 import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/chat", label: "Chat" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/agent", label: "Agent" },
+  { href: "/sdk", label: "SDK" },
   { href: "/docs", label: "Docs" },
 ];
 
 export function Nav() {
   const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-30 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <Logo className="h-10 w-auto" priority />
@@ -37,6 +39,7 @@ export function Nav() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <BalanceButton />
           <ThemeToggle />
           <WalletButton />
         </div>
