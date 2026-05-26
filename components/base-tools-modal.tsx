@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAccount } from "wagmi";
 import { X, Wallet, ArrowLeftRight, Rocket, Landmark, TrendingUp, DollarSign } from "lucide-react";
 
@@ -14,12 +16,21 @@ const TOOLS = [
 
 export function BaseToolsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  if (!open) return null;
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
-  return (
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm overflow-y-auto"
       onClick={onClose}
     >
       <div
@@ -59,6 +70,7 @@ export function BaseToolsModal({ open, onClose }: { open: boolean; onClose: () =
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

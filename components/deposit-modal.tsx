@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseUnits, formatUnits, erc20Abi } from "viem";
 import { base } from "wagmi/chains";
@@ -35,6 +36,9 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
     hash: txHash,
   });
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) {
       setAmount("");
@@ -43,7 +47,17 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
     }
   }, [open, reset]);
 
-  if (!open) return null;
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
 
   const usdcBalanceFmt = usdcBalance ? formatUnits(usdcBalance, 6) : "0";
 
@@ -71,9 +85,9 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div className="flex min-h-full items-center justify-center p-4">
@@ -213,7 +227,8 @@ export function DepositModal({ open, onClose }: { open: boolean; onClose: () => 
         )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
