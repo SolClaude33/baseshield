@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, integer, bigint, uuid, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const users = pgTable(
@@ -5,7 +6,7 @@ export const users = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     walletAddress: text("wallet_address").notNull(),
-    balanceMicroUsdc: bigint("balance_micro_usdc", { mode: "bigint" }).notNull().default(0n),
+    balanceMicroUsdc: bigint("balance_micro_usdc", { mode: "bigint" }).notNull().default(sql`0`),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
@@ -57,7 +58,7 @@ export const usageLog = pgTable(
     model: text("model").notNull(),
     inputTokens: integer("input_tokens").notNull().default(0),
     outputTokens: integer("output_tokens").notNull().default(0),
-    costMicroUsdc: bigint("cost_micro_usdc", { mode: "bigint" }).notNull().default(0n),
+    costMicroUsdc: bigint("cost_micro_usdc", { mode: "bigint" }).notNull().default(sql`0`),
     source: text("source").notNull().default("chat"), // chat | api
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
