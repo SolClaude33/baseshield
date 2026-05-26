@@ -7,6 +7,7 @@ export const users = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     walletAddress: text("wallet_address").notNull(),
     balanceMicroUsdc: bigint("balance_micro_usdc", { mode: "bigint" }).notNull().default(sql`0`),
+    freeMessagesUsed: integer("free_messages_used").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({

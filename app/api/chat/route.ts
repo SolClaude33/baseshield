@@ -7,6 +7,8 @@ import { hashApiKey } from "@/lib/auth/api-key";
 import { MODELS, costMicroUsdc, type ModelId } from "@/lib/llm/pricing";
 import { runChat } from "@/lib/llm/providers";
 
+const FREE_TIER_LIMIT = 3;
+
 const BodySchema = z.object({
   model: z.string(),
   messages: z.array(
@@ -50,12 +52,18 @@ export async function POST(req: Request) {
     userId = session.userId;
   }
 
-  // Check balance.
+  // Check balance / free tier.
   const user = await db.query.users.findFirst({ where: eq(schema.users.id, userId!) });
   if (!user) return NextResponse.json({ error: "user not found" }, { status: 404 });
-  if (user.balanceMicroUsdc <= 0n) {
+  const freeRemaining = Math.max(0, FREE_TIER_LIMIT - user.freeMessagesUsed);
+  const usingFreeTier = freeRemaining > 0;
+  if (!usingFreeTier && user.balanceMicroUsdc <= 0n) {
     return NextResponse.json(
-      { error: "insufficient balance — deposit USDC on Base to continue" },
+      {
+        error: "insufficient balance",
+        reason: "free_tier_exhausted",
+        message: `You've used all ${FREE_TIER_LIMIT} free messages. Deposit USDC on Base to continue.`,
+      },
       { status: 402 },
     );
   }
@@ -70,20 +78,28 @@ export async function POST(req: Request) {
   }
 
   // Bill + log.
-  const cost = costMicroUsdc(modelId, result.inputTokens, result.outputTokens);
+  const realCost = costMicroUsdc(modelId, result.inputTokens, result.outputTokens);
+  const billedCost = usingFreeTier ? 0n : realCost;
 
   await db.transaction(async (tx) => {
-    await tx
-      .update(schema.users)
-      .set({ balanceMicroUsdc: sql`${schema.users.balanceMicroUsdc} - ${cost}` })
-      .where(eq(schema.users.id, userId!));
+    if (usingFreeTier) {
+      await tx
+        .update(schema.users)
+        .set({ freeMessagesUsed: sql`${schema.users.freeMessagesUsed} + 1` })
+        .where(eq(schema.users.id, userId!));
+    } else {
+      await tx
+        .update(schema.users)
+        .set({ balanceMicroUsdc: sql`${schema.users.balanceMicroUsdc} - ${billedCost}` })
+        .where(eq(schema.users.id, userId!));
+    }
     await tx.insert(schema.usageLog).values({
       userId: userId!,
       apiKeyId,
       model: modelId,
       inputTokens: result.inputTokens,
       outputTokens: result.outputTokens,
-      costMicroUsdc: cost,
+      costMicroUsdc: billedCost,
       source,
     });
     if (apiKeyId) {
@@ -100,8 +116,10 @@ export async function POST(req: Request) {
     usage: {
       inputTokens: result.inputTokens,
       outputTokens: result.outputTokens,
-      costMicroUsdc: cost.toString(),
-      costUsdc: (Number(cost) / 1_000_000).toFixed(6),
+      costMicroUsdc: billedCost.toString(),
+      costUsdc: (Number(billedCost) / 1_000_000).toFixed(6),
+      freeTier: usingFreeTier,
+      freeRemaining: Math.max(0, freeRemaining - 1),
     },
     encrypted: false, // v1 — TEE encryption coming in v2
   });

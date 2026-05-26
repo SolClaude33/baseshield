@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { ArrowUp, Loader2, Paperclip, Wrench, Mic, Sparkles } from "lucide-react";
 import { MODELS, DEFAULT_MODEL, type ModelId } from "@/lib/llm/pricing";
 import { BaseToolsModal } from "@/components/base-tools-modal";
+import { DepositModal } from "@/components/deposit-modal";
 
 type Msg = { role: "user" | "assistant"; content: string; model?: ModelId };
 
@@ -29,15 +30,51 @@ function ChatInner() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [freeRemaining, setFreeRemaining] = useState<number | null>(null);
+  const [freeTierLimit, setFreeTierLimit] = useState(3);
+  const [balanceMicroUsdc, setBalanceMicroUsdc] = useState<bigint>(0n);
   const endRef = useRef<HTMLDivElement>(null);
+
+  const loadStatus = useCallback(async () => {
+    if (!isConnected) return;
+    try {
+      const r = await fetch("/api/balance");
+      if (!r.ok) return;
+      const data = await r.json();
+      setFreeRemaining(data.freeRemaining ?? 0);
+      setFreeTierLimit(data.freeTierLimit ?? 3);
+      setBalanceMicroUsdc(BigInt(data.microUsdc ?? "0"));
+    } catch {}
+  }, [isConnected]);
+
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
+
+  // Refresh status after closing the deposit modal (in case they deposited)
+  useEffect(() => {
+    if (!depositOpen && isConnected) loadStatus();
+  }, [depositOpen, isConnected, loadStatus]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
 
+  const freeUsed = freeRemaining !== null ? freeTierLimit - freeRemaining : 0;
+  const hasBalance = balanceMicroUsdc > 0n;
+  const canSend = freeRemaining === null || freeRemaining > 0 || hasBalance;
+
   async function send() {
     if (!input.trim() || busy) return;
     setError(null);
+
+    // Local gate: if no free messages left AND no balance, open deposit modal
+    if (!canSend) {
+      setDepositOpen(true);
+      return;
+    }
+
     const userMsg: Msg = { role: "user", content: input.trim() };
     const next: Msg[] = [...messages, userMsg];
     setMessages(next);
@@ -53,10 +90,22 @@ function ChatInner() {
         }),
       });
       const data = await r.json();
+      if (r.status === 402) {
+        // Free tier exhausted, no balance
+        setMessages(messages); // revert
+        setInput(userMsg.content);
+        setDepositOpen(true);
+        loadStatus();
+        return;
+      }
       if (!r.ok) {
         setError(data.error ?? "request failed");
       } else {
         setMessages([...next, { role: "assistant", content: data.message, model }]);
+        if (data.usage?.freeRemaining !== undefined) {
+          setFreeRemaining(data.usage.freeRemaining);
+        }
+        loadStatus();
       }
     } catch {
       setError("network error");
@@ -120,7 +169,22 @@ function ChatInner() {
           )}
 
           <p className="mb-3 text-center text-[11px] text-muted-foreground">
-            {isConnected ? "End-to-end secured · pay-per-call in USDC" : "Connect wallet to start"}
+            {!isConnected ? (
+              "Connect wallet to start"
+            ) : freeRemaining !== null && freeRemaining > 0 ? (
+              <>
+                <span className="font-medium text-foreground">{freeUsed}/{freeTierLimit}</span> free messages used
+              </>
+            ) : hasBalance ? (
+              "End-to-end secured · pay-per-call in USDC"
+            ) : (
+              <button
+                onClick={() => setDepositOpen(true)}
+                className="font-medium text-[#0052ff] hover:underline"
+              >
+                Free messages used up — Top up to continue
+              </button>
+            )}
           </p>
 
           <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-[#0052ff]/5">
@@ -186,6 +250,7 @@ function ChatInner() {
       </div>
 
       <BaseToolsModal open={toolsOpen} onClose={() => setToolsOpen(false)} />
+      <DepositModal open={depositOpen} onClose={() => setDepositOpen(false)} />
     </div>
   );
 }
