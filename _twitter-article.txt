@@ -1,0 +1,138 @@
+BaseShield: Private AI without the middleman
+
+
+Every AI app today asks three things before letting you in: an email, a credit card, and a promise that you trust them with your prompts.
+
+We disagreed with all three.
+
+BaseShield is a private AI gateway on @base. Connect a wallet, send a message, pay only for what you use. No email, no KYC, no subscription. We can't be banned. We can't rate-limit you for "suspicious activity." We don't read your prompts — because we can't.
+
+Here's what we built and what each piece fixes.
+
+
+---
+
+
+Wallet login (SIWE)
+
+The problem: Every AI product locks you behind an email signup, phone verification, sometimes a selfie. Your account can be banned. Your data can be subpoenaed. You're tied to a platform.
+
+What we did: Sign-In With Ethereum. You sign one message with your wallet. We issue a session cookie. That's the entire auth — no email column in our database, no password reset flow, no "we noticed a new login" notification.
+
+Your wallet is your identity. It can't be banned.
+
+
+---
+
+
+Pay-per-call in USDC
+
+The problem: $20/mo for ChatGPT. $30 for Claude. $200 for the Pro tier you barely use. Subscriptions exist because credit cards force a $0.30 floor on every transaction — micropayments are impossible on web2 rails.
+
+What we did: USDC on Base settles in seconds for fractions of a cent. You top up with whatever amount, we deduct per token used. Stop using → stop paying. Want to leave? Withdraw what's left. No retention call required.
+
+
+---
+
+
+3 free messages per wallet
+
+The problem: "Free trial requires credit card." Friction kills curiosity. Anonymous trials get abused; gated trials get ignored.
+
+What we did: Every wallet gets 3 free messages on first connect. No card, no commitment. If you like it, deposit USDC. If not, you used 3 messages of GPT-OSS 120B inference on us. Tracked as a one-time benefit per address — Sybil resistance built into the wallet primitive itself.
+
+
+---
+
+
+x402 for autonomous agents
+
+The problem: AI agents are here, and they need to pay for inference. But credit cards need humans (KYC, billing addresses, fraud reviews), and API keys can be revoked or shared. There's no clean rail for an autonomous script to pay an API.
+
+What we did: Implemented x402, @coinbase's HTTP-native micropayment standard. An agent POSTs to /api/x402/chat/completions. We respond 402 with payment requirements. The agent signs an EIP-3009 USDC authorization, resends with the X-PAYMENT header. We verify with the facilitator, run inference, settle on-chain. No account anywhere in the loop.
+
+Discovery manifest live at /.well-known/x402. Any x402-aware client finds the endpoint and pricing automatically.
+
+
+---
+
+
+End-to-end encrypted inference
+
+The problem: Most AI providers see your prompt in plaintext. They can train on it, employees can read it, breaches expose it. "Trust me" is the entire privacy model.
+
+What we did: Intel TDX confidential VMs on @PhalaNetwork. Your prompt is sealed client-side with a public key whose private half lives only inside attested enclave memory. We're a blind relay — we route encrypted bytes, decryption happens in hardware no one can introspect. Verifiable attestation published on @base.
+
+The provider sees nothing. We see nothing. You can verify the running code measurement on-chain.
+
+
+---
+
+
+Shielded payments
+
+The problem: Even with private inference, the deposit flow leaks. Anyone watching the chain can see your wallet sends USDC to BaseShield — which reveals you use the service at all.
+
+What we did: Integrated @RAILGUN_Project shielded balances. Top up flows through a ZK shielded pool — the chain sees a deposit into Railgun, not a deposit to BaseShield. Withdrawals work the same way.
+
+Full-stack privacy: anonymous auth, encrypted inference, shielded payments.
+
+
+---
+
+
+Multi-model through one endpoint
+
+The problem: Today's reality is multi-model — GPT for some queries, Claude for others, open-source for cheap stuff. But each provider has its own SDK, billing, rate limits, key rotation. Vendor sprawl.
+
+What we did: One OpenAI-compatible gateway behind a single key. Live today: GPT-OSS 120B at $0.15/M input, $0.30/M output. Coming: DeepSeek V3.1 ($0.10/$0.20) and Claude Sonnet 4.6 ($0.30/$0.60). Our API stays stable; we swap upstream models without breaking your integration.
+
+
+---
+
+
+MCP server + Agent API
+
+The problem: Agents built with Claude Desktop, Cursor, or any A2A-aware client need first-class tools, not raw HTTP. Manually wiring up auth + payment + inference for each integration is friction every team eats.
+
+What we did: Published @baseshield/mcp-server on npm. Drop it into any MCP config and your agent has encrypted_chat, private_research, private_token_analysis, and the full x402 surface as native tools. Zero glue code.
+
+
+---
+
+
+Trustless deposit detection
+
+The problem: When a user sends USDC to your address, how does your DB know? Either poll the chain (expensive, slow), run an indexer (operational burden), or trust a third party (defeats the point).
+
+What we did: A blockchain notify webhook listens for incoming transfers, posts to our endpoint with an HMAC signature, we verify, idempotent-insert by tx_hash, credit the user. Zero polling. The on-chain transaction is the source of truth.
+
+
+---
+
+
+$SHIELD — the project token
+
+Launching via @clanker on @base.
+
+$SHIELD is not required to use BaseShield. USDC stays the primary rail forever — we wouldn't gate inference behind a speculative token. What $SHIELD does:
+
+· Optional payment method alongside USDC (small discount per call)
+· Buyback & burn — a share of inference revenue buys $SHIELD on the open market and burns it
+· Future governance over things like model whitelisting and fee structure
+
+Token date and supply details coming separately. We wanted the product to work before the token, not the other way around.
+
+
+---
+
+
+TL;DR
+
+Most AI tools sell you a subscription, ask for your email, train on your prompts, and can ban you when they want.
+
+We sell nothing. We don't have your email. We can't read your prompts. Your wallet can't be banned. Your payments stay shielded.
+
+Web3 was supposed to fix this. We just used the rails.
+
+→ baseshieldpriv.xyz

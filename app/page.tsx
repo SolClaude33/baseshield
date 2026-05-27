@@ -75,25 +75,22 @@ export default function Landing() {
 
         <div className="mt-5 grid gap-5 md:grid-cols-3">
           <ProductCard
-            badge="v2"
+            badge="Live"
             icon={<ShieldCheck className="size-5" />}
             title="TEE encryption"
             body="Intel TDX confidential VMs on Phala dStack. Verifiable attestation on Base."
-            muted
           />
           <ProductCard
-            badge="v2"
+            badge="Live"
             icon={<Lock className="size-5" />}
-            title="Railgun private swaps"
-            body="Shielded ERC-20 transfers integrated for agents that need on-chain privacy."
-            muted
+            title="Railgun shielded payments"
+            body="Shielded ERC-20 deposits and withdrawals — your top-ups stay private on-chain."
           />
           <ProductCard
-            badge="v2"
+            badge="Live"
             icon={<Cpu className="size-5" />}
             title="MCP server + Agent API"
             body="Drop-in tools for Claude Desktop, Cursor, and any A2A-aware agent."
-            muted
           />
         </div>
       </section>
